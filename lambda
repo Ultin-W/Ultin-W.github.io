@@ -1,0 +1,36 @@
+const AWS = require('aws-sdk');
+
+const secretsManager = new AWS.SecretsManager();
+
+exports.handler = async (event, context) => {
+  try {
+    // Retrieve the OpenAI API key from AWS Secrets Manager
+    const secretName = 'your-secret-name';
+    const secret = await secretsManager.getSecretValue({ SecretId: secretName }).promise();
+    const apiKey = secret.SecretString;
+
+    // Make a request to the OpenAI API using your API key
+    const openai = new OpenAI(apiKey);
+    const imageGenerationResult = await openai.completions.create({
+      engine: 'davinci',
+      prompt: 'Generate an image of a cat',
+      max_tokens: 50,
+      temperature: 0.7,
+    });
+
+    // Process the imageGenerationResult as needed
+    const generatedImage = imageGenerationResult.choices[0].text;
+
+    // Return the generated image or perform other operations
+    return {
+      statusCode: 200,
+      body: generatedImage,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: 'Error generating image',
+    };
+  }
+};
